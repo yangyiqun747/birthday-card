@@ -39,24 +39,20 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
   display: grid; place-items: center; width: 35px; height: 35px; border-radius: 50%; border: 1px solid #eab6dc50;
   background: radial-gradient(ellipse, #704761, #2b1d35); color: #ffdbad; font-size: 1.18rem;
 }
-.top-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; align-items: center; gap: 7px 12px; }
 .sound-toggle {
   min-height: 40px; padding: 0 11px; cursor: pointer; border: 1px solid var(--edge); border-radius: 999px;
   background: #f8d9ec09; color: var(--muted); font-size: .82rem; white-space: nowrap;
 }
 .sound-toggle[aria-pressed="true"] { border-color: #ffdba66b; color: var(--gold); }
 .sound-toggle:hover { background: #f8d9ec17; }
-.camera-badge { display: flex; align-items: center; gap: 8px; margin: 0; font-size: .875rem; color: var(--muted); }
-.camera-badge span:first-child { width: 7px; height: 7px; border-radius: 50%; background: #ffd38d; }
-.camera-badge[data-status="active"] span:first-child { background: #b6e4bd; box-shadow: 0 0 0 3px #b6e4bd20; }
 
 .card-layout {
   display: grid; grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); align-items: center;
   gap: clamp(24px, 5.1vw, 80px); padding: clamp(36px, 6.5vh, 74px) 0 32px;
 }
-.intro h1 { margin: 0; font: 700 clamp(3.4rem, 6.15vw, 6.1rem)/1.09 var(--serif); letter-spacing: -.07em; overflow-wrap: anywhere; }
+.intro h1 { margin: 0 0 26px; font: 700 clamp(3.4rem, 6.15vw, 6.1rem)/1.09 var(--serif); letter-spacing: -.07em; overflow-wrap: anywhere; }
 .intro h1 em { color: var(--gold); font-style: normal; text-shadow: 0 0 32px #ecad9470; }
-.intro-copy { color: var(--muted); font-size: clamp(1rem, 1.46vw, 1.12rem); line-height: 1.74; margin: 19px 0 24px; }
+[data-phase="celebrated"] .intro h1 { margin-bottom: 0; }
 
 .steps { display: flex; align-items: center; flex-wrap: wrap; gap: 7px 10px; list-style: none; padding: 0; margin: 0 0 14px; color: var(--muted); }
 .step { display: inline-flex; align-items: center; gap: 6px; font-size: .86rem; }
@@ -84,7 +80,8 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
 [data-camera-active] .primary:hover { background: #f7d9ee16; }
 .camera-icon { display: inline-block; width: 13px; height: 10px; margin-right: 4px; border: 1.5px solid currentColor; position: relative; border-radius: 2px; }
 .camera-icon::after { content: ""; position: absolute; right: -5px; top: 1px; width: 4px; height: 5px; background: currentColor; clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 70%); }
-.status { color: var(--muted); font-size: .875rem; margin: 10px 0 0; line-height: 1.55; min-height: 2.75em; }
+.status { color: var(--muted); font-size: .875rem; margin: 10px 0 0; line-height: 1.55; }
+.status:empty { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
 
 .scene {
   position: relative; isolation: isolate; min-width: 0; overflow: hidden; aspect-ratio: 1.36; min-height: 440px;
@@ -101,12 +98,11 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
 #particle-scene[data-dragging] { cursor: grabbing; }
 #particle-scene:focus-visible { outline: 2px solid var(--gold); outline-offset: -4px; }
 [data-phase="celebrated"] #particle-scene { touch-action: auto; cursor: default; }
-.scene-state, .orbit-hint {
+.orbit-hint {
   position: absolute; z-index: 2; top: 18px; max-width: calc(50% - 23px); padding: 6px 10px; pointer-events: none;
-  border: 1px solid #ffccdf30; border-radius: 999px; font-size: .82rem; line-height: 1.43; color: #f1d8eb; background: #271b32bb;
+  right: 18px; border: 1px solid #ffccdf30; border-radius: 999px; font-size: .82rem; line-height: 1.43;
+  color: var(--muted); background: #271b32bb;
 }
-.scene-state { left: 18px; }
-.orbit-hint { right: 18px; color: var(--muted); }
 [data-phase="celebrated"] .orbit-hint { display: none; }
 .viewfinder {
   overflow: hidden; position: absolute; z-index: 5; right: 17px; bottom: 17px; width: clamp(104px, 24%, 147px);
@@ -129,22 +125,21 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
 
 .footnote { display: flex; align-items: center; gap: 7px; border-top: 1px solid var(--edge); padding: 15px 0 20px; color: var(--muted); font-size: .82rem; }
 .footnote span { color: var(--rose); }
+[data-phase="celebrated"] .footnote { display: none; }
 
 @media (max-width: 850px) {
   .shell { width: min(575px, calc(100% - 34px)); }
   .topbar { padding: 14px 0; }
   .card-layout { grid-template-columns: minmax(0, 1fr); padding: 20px 0 18px; gap: 12px; }
   .intro { display: contents; }
-  .intro h1 { font-size: clamp(2.43rem, 8.3vw, 4.2rem); letter-spacing: -.075em; }
+  .intro h1 { margin-bottom: 0; font-size: clamp(2.43rem, 8.3vw, 4.2rem); letter-spacing: -.075em; }
   .intro h1 br { display: none; }
-  .intro-copy { margin: -3px 0 0; line-height: 1.55; }
   .scene { order: 1; min-height: 0; aspect-ratio: 1.1; border-radius: 21px; }
   .scene::after { inset: 7px; border-radius: 15px; }
   .steps { order: 2; margin: 0; }
   .gesture-cue { order: 3; max-width: none; margin: 0; }
   .controls { order: 4; }
   .status { order: 5; min-height: 1.5em; margin: -3px 0 0; }
-  .scene-state { top: 13px; left: 13px; }
   .orbit-hint { top: 13px; right: 13px; }
   .viewfinder { bottom: 12px; right: 12px; }
   .letter { bottom: 6%; width: 84%; max-height: 54%; }
@@ -163,18 +158,14 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
   <div class="shell">
     <header class="topbar">
       <div class="mark"><span class="seal" aria-hidden="true">✧</span> 生日贺卡</div>
-      <div class="top-actions">
-        <p class="camera-badge" id="camera-badge" data-status="idle" hidden><span></span><span id="camera-label">手势未开启</span></p>
-        <button class="sound-toggle" id="sound-toggle" type="button" aria-label="音效" aria-pressed="false"><span>音效关</span></button>
-      </div>
+      <button class="sound-toggle" id="sound-toggle" type="button" aria-label="音效" aria-pressed="false"><span>音效关</span></button>
     </header>
 
     <main class="card-layout">
       <section class="intro" aria-labelledby="title">
         <h1 id="title">为你点亮<br><em>一颗星。</em></h1>
-        <p class="intro-copy" id="intro-copy">把手伸进镜头，让星尘聚成今天的蛋糕。</p>
 
-        <ol class="steps" aria-label="贺卡进度">
+        <ol class="steps" id="steps" aria-label="贺卡进度">
           <li class="step" aria-current="step">聚星</li>
           <li class="step">点烛</li>
           <li class="step">烟花</li>
@@ -182,19 +173,18 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
 
         <div class="gesture-cue" id="gesture-cue">
           <span id="gesture-icon" class="gesture-icon" aria-hidden="true">✋</span>
-          <div><strong id="gesture-title">张开手掌</strong><p id="gesture-detail">保持一下，让星尘聚成蛋糕。</p></div>
+          <div><strong id="gesture-title">张开手掌</strong><p id="gesture-detail">在镜头前保持一下。</p></div>
         </div>
         <div class="controls">
           <button class="button primary" id="camera-button" type="button"><span class="camera-icon" aria-hidden="true"></span><span id="camera-action">开启手势</span></button>
         </div>
-        <p class="status" id="status" role="status">开启后，把一只手放进镜头里。</p>
+        <p class="status" id="status" role="status"></p>
         <noscript><p class="status">请启用 JavaScript 体验互动。</p></noscript>
       </section>
 
       <section class="scene" id="scene" aria-label="生日星尘、粒子蛋糕和烟花">
         <canvas id="point-cloud" aria-hidden="true"></canvas>
         <canvas id="particle-scene" tabindex="0" role="img" aria-label="三维粒子画面，能拖动、用方向键或开启摄像头后用食指旋转"></canvas>
-        <span class="scene-state" id="scene-state">星尘</span>
         <span class="orbit-hint" id="orbit-hint">拖动旋转</span>
         <div class="viewfinder" id="viewfinder" hidden>
           <video id="camera-video" autoplay muted playsinline aria-label="手势摄像头预览"></video>
@@ -917,20 +907,17 @@ const handsBase = 'https://unpkg.com/@mediapipe/hands@0.4.1675469240/';
 const phases = {
   sealed: {
     gesture: 'palm', step: 0, next: 'ready', icon: '✋',
-    title: '张开手掌', detail: '保持一下，让星尘聚成蛋糕。',
-    copy: '把手伸进镜头，让星尘聚成今天的蛋糕。', scene: '星尘',
+    title: '张开手掌', detail: '在镜头前保持一下。',
   },
   ready: {
     gesture: 'pinch', step: 1, next: 'lit', icon: '🤏',
     title: '捏合手指', detail: '让拇指和食指轻轻碰在一起。',
-    copy: '蛋糕已经成形，还差一点烛光。', scene: '等你点亮蜡烛',
   },
   lit: {
     gesture: 'victory', step: 2, next: 'celebrated', icon: '✌️',
     title: '许完愿，做个剪刀手', detail: '伸出食指和中指，保持一下。',
-    copy: '愿望可以慢慢想。准备好后，放一场烟花。', scene: '许个愿',
   },
-  celebrated: { copy: '今晚的烟花，送给今天的你。', scene: '愿望已送出' },
+  celebrated: {},
 };
 let phase = 'sealed';
 let camera = null;
@@ -947,13 +934,7 @@ if (BirthdayCard.signature) {
 }
 
 function showCamera(state) {
-  const badge = byId('camera-badge');
-  badge.dataset.status = state;
-  badge.hidden = state === 'idle';
   document.body.toggleAttribute('data-camera-active', state === 'active');
-  byId('camera-label').textContent = {
-    idle: '手势未开启', loading: '正在开启手势', active: '手势已开启',
-  }[state];
   byId('camera-action').textContent = {
     idle: '开启手势', loading: '取消开启', active: '关闭摄像头',
   }[state];
@@ -979,9 +960,8 @@ function setPhase(next) {
     if (index === current.step) step.setAttribute('aria-current', 'step');
     else step.removeAttribute('aria-current');
   }
-  byId('intro-copy').textContent = current.copy;
+  byId('steps').hidden = complete;
   byId('gesture-cue').hidden = complete;
-  byId('scene-state').textContent = current.scene;
   cameraButton.parentElement.hidden = complete;
   const heading = byId('letter-title');
   if (complete && BirthdayCard.recipient) heading.textContent = BirthdayCard.recipient + '，生日快乐！';
@@ -989,7 +969,6 @@ function setPhase(next) {
 
   if (complete) {
     stopCamera();
-    status.textContent = '生日祝福已送到。';
     heading.focus({ preventScroll: true });
     const bounds = scene.getBoundingClientRect();
     if (bounds.top < 0 || bounds.bottom > window.innerHeight) {
@@ -1001,7 +980,7 @@ function setPhase(next) {
   byId('gesture-icon').textContent = current.icon;
   byId('gesture-title').textContent = current.title;
   byId('gesture-detail').textContent = current.detail;
-  status.textContent = '把手势保持片刻即可。';
+  status.textContent = '';
   showTracking('等待手势');
 }
 
@@ -1065,7 +1044,7 @@ function stopCamera(message) {
   particles.setHand(null);
   showCamera('idle');
   showTracking('等待手势');
-  if (message) status.textContent = message;
+  status.textContent = message || '';
 }
 
 function trackFrames(session) {
@@ -1139,7 +1118,7 @@ async function startCamera() {
     session.active = true;
     clearTimeout(session.timer);
     showCamera('active');
-    status.textContent = '把手势保持片刻即可。';
+    status.textContent = '';
     trackFrames(session);
   } catch (error) {
     if (camera !== session) return;
