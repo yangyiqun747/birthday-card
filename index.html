@@ -193,9 +193,9 @@ button:focus-visible, h2:focus-visible { outline: 2px solid var(--gold); outline
 
       <section class="scene" id="scene" aria-label="生日星尘、粒子蛋糕和烟花">
         <canvas id="point-cloud" aria-hidden="true"></canvas>
-        <canvas id="particle-scene" tabindex="0" role="img" aria-label="三维粒子画面，拖动或用方向键旋转"></canvas>
+        <canvas id="particle-scene" tabindex="0" role="img" aria-label="三维粒子画面，能拖动、用方向键或开启摄像头后用食指旋转"></canvas>
         <span class="scene-state" id="scene-state">星尘</span>
-        <span class="orbit-hint" aria-hidden="true">拖动旋转</span>
+        <span class="orbit-hint" id="orbit-hint">拖动旋转</span>
         <div class="viewfinder" id="viewfinder" hidden>
           <video id="camera-video" autoplay muted playsinline aria-label="手势摄像头预览"></video>
           <span class="tracking-caption" id="tracking-label">等待手势</span>
@@ -253,6 +253,7 @@ const BirthdayGestures = (() => {
     if (index && middle && !ring && !little && fingersApart) return 'victory';
     if (distance(points[4], points[8]) < palm * .29) return 'pinch';
     if (index && middle && ring && little) return 'palm';
+    if (index && !middle && !ring && !little) return 'point';
     return null;
   }
 
@@ -462,11 +463,12 @@ function createParticleScene(canvas, cloudCanvas) {
   let phase = 'sealed';
   let phaseAt = performance.now();
   let cakeAt = phaseAt;
-  let handTurn = 0;
-  let turn = 0;
   let orbitYaw = null;
   let orbitPitch = 0;
+  let displayedYaw = 0;
+  let displayedPitch = 0;
   let drag = null;
+  let airAnchor = null;
   let frame = 0;
   let dpr = 1;
   let lastFrame = 0;
@@ -636,18 +638,18 @@ function createParticleScene(canvas, cloudCanvas) {
     const sealed = phase === 'sealed';
     const lit = phase === 'lit';
     const finale = phase === 'celebrated';
-    const turnGoal = still || drag ? 0 : handTurn;
-    turn += (turnGoal - turn) * .045;
-
     ctx.clearRect(0, 0, width, height);
     renderSky(t);
     const scale = Math.min(width * .48, height * .49);
     const centerY = height * (sealed ? .51 : .53);
-    const angle = (orbitYaw ?? t * .165) + turn;
+    const yaw = orbitYaw ?? t * .165;
+    displayedYaw = orbitYaw === null || still ? yaw : displayedYaw + (yaw - displayedYaw) * .28;
+    displayedPitch = still ? orbitPitch : displayedPitch + (orbitPitch - displayedPitch) * .28;
+    const angle = displayedYaw;
     const sin = Math.sin(angle);
     const cos = Math.cos(angle);
     const morph = sealed ? 0 : still ? 1 : 1 - Math.exp(-Math.max(0, now - cakeAt) / 320);
-    const tilt = Math.max(-.62, Math.min(1.1, .50 - morph * .26 + orbitPitch));
+    const tilt = Math.max(-.62, Math.min(1.1, .50 - morph * .26 + displayedPitch));
     const st = Math.sin(tilt);
     const ct = Math.cos(tilt);
     const stretch = finale ? 1 + (1 - Math.exp(-elapsed * 3.5)) * 1.8 : 1;
@@ -746,9 +748,29 @@ function createParticleScene(canvas, cloudCanvas) {
   function rotateBy(dx, dy) {
     const now = performance.now();
     const autoYaw = (reduced.matches ? .85 : now / 1000) * .165;
-    orbitYaw = ((orbitYaw ?? autoYaw) + dx * .009) % tau;
+    orbitYaw = (orbitYaw ?? autoYaw) + dx * .009;
     orbitPitch = Math.max(-.85, Math.min(.75, orbitPitch + dy * .007));
     if (reduced.matches) paint(now, true);
+  }
+
+  function trackFinger(tip) {
+    if (!tip || drag || phase === 'celebrated') {
+      airAnchor = null;
+      return;
+    }
+    const now = performance.now();
+    const dx = airAnchor ? airAnchor.x - tip.x : 0;
+    const dy = airAnchor ? tip.y - airAnchor.y : 0;
+    if (!airAnchor || now - airAnchor.seen > 250 || Math.max(Math.abs(dx), Math.abs(dy)) > .25) {
+      airAnchor = { x: tip.x, y: tip.y, seen: now };
+      return;
+    }
+    airAnchor.seen = now;
+    if (Math.hypot(dx, dy) < .005) return;
+    const distance = Math.min(width, height) * 1.7;
+    rotateBy(dx * distance, dy * distance);
+    airAnchor.x = tip.x;
+    airAnchor.y = tip.y;
   }
 
   function endDrag(id) {
@@ -760,6 +782,7 @@ function createParticleScene(canvas, cloudCanvas) {
 
   canvas.addEventListener('pointerdown', (event) => {
     if (phase === 'celebrated' || drag || !event.isPrimary || event.button !== 0) return;
+    airAnchor = null;
     drag = { id: event.pointerId, x: event.clientX, y: event.clientY };
     canvas.setPointerCapture(event.pointerId);
     canvas.setAttribute('data-dragging', '');
@@ -789,6 +812,7 @@ function createParticleScene(canvas, cloudCanvas) {
     setPhase(next) {
       phase = next;
       phaseAt = performance.now();
+      airAnchor = null;
       if (next === 'ready') cakeAt = phaseAt;
       if (next === 'celebrated') {
         if (drag) endDrag(drag.id);
@@ -797,7 +821,7 @@ function createParticleScene(canvas, cloudCanvas) {
       if (reduced.matches) paint(phaseAt, true);
     },
     setHand(points) {
-      handTurn = points ? (.5 - points[9].x) * .8 : 0;
+      trackFinger(points?.[8]);
     },
   };
 }
@@ -933,6 +957,7 @@ function showCamera(state) {
   byId('camera-action').textContent = {
     idle: '开启手势', loading: '取消开启', active: '关闭摄像头',
   }[state];
+  byId('orbit-hint').textContent = state === 'active' ? '☝️ 食指隔空旋转' : '拖动旋转';
   byId('viewfinder').hidden = !camera?.stream;
 }
 
@@ -983,11 +1008,12 @@ function setPhase(next) {
 function handleHand(results, session) {
   if (camera !== session || !session.active) return;
   const points = results.multiHandLandmarks?.[0];
-  particles.setHand(points);
   const gesture = BirthdayGestures.classify(points);
+  particles.setHand(gesture === 'point' ? points : null);
   const current = phases[phase];
   const { progress, complete } = hold.update(gesture === current.gesture ? gesture : null, performance.now());
-  showTracking(!points ? '把手放进画面' : progress > 0 ? '保持这个手势' : '看一眼手势提示', progress);
+  if (gesture === 'point') showTracking('移动食指旋转');
+  else showTracking(!points ? '把手放进画面' : progress > 0 ? '保持这个手势' : '看一眼手势提示', progress);
   if (complete) setPhase(current.next);
 }
 
