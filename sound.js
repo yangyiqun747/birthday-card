@@ -50,11 +50,12 @@ function createCardSound(button, { volume, music } = {}) {
   let output;
   let musicTimer;
   let enabled = false;
+  let micActive = false;
   let interruption = 0;
   let lastTyping = -Infinity;
 
   function canPlay() {
-    return enabled && context?.state === 'running' && !document.hidden;
+    return enabled && !micActive && context?.state === 'running' && !document.hidden;
   }
 
   function updateVolume() {
@@ -214,6 +215,16 @@ function createCardSound(button, { volume, music } = {}) {
   });
 
   return {
+    setMicActive(next) {
+      if (micActive === next) return;
+      micActive = next;
+      if (next) {
+        stopMusic();
+        stopNotes(effects);
+      } else if (enabled) {
+        startMusic();
+      }
+    },
     play(phase) {
       if (!canPlay() || !Object.hasOwn(cues, phase)) return;
       const now = context.currentTime + .02;

@@ -3,10 +3,10 @@
 function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
   const AudioEngine = window.AudioContext || window.webkitAudioContext;
   const sampleInterval = 40;
-  const calibrationTime = 800;
+  const calibrationTime = 600;
   const listeningTime = 14000;
-  const requiredBlowTime = 650;
-  const allowedGap = 100;
+  const requiredBlowTime = 520;
+  const allowedGap = 130;
   let active;
 
   function stop() {
@@ -20,6 +20,8 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
       track.stop();
     }
     session.source?.disconnect();
+    session.analyser?.disconnect();
+    session.silentOutput?.disconnect();
     if (session.context && session.context.state !== 'closed') {
       void session.context.close().catch(() => {});
     }
@@ -46,7 +48,7 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
   function coverage(spectrum, [first, last]) {
     let peak = -Infinity;
     for (let bin = first; bin < last; bin++) peak = Math.max(peak, spectrum[bin]);
-    const cutoff = Math.max(-81, peak - 21);
+    const cutoff = Math.max(-89, peak - 19);
     let occupied = 0;
     for (let bin = first; bin < last; bin++) {
       if (spectrum[bin] >= cutoff) occupied++;
@@ -60,7 +62,12 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
     analyser.smoothingTimeConstant = 0;
     session.source = session.context.createMediaStreamSource(session.stream);
     session.source.connect(analyser);
-    // The analyser has no output connection, so microphone audio never reaches speakers.
+    // Keep the Web Audio graph active while sending only silence to the output.
+    session.analyser = analyser;
+    session.silentOutput = session.context.createGain();
+    session.silentOutput.gain.value = 0;
+    analyser.connect(session.silentOutput);
+    session.silentOutput.connect(session.context.destination);
     const waveform = new Float32Array(analyser.fftSize);
     const spectrum = new Float32Array(analyser.frequencyBinCount);
     const binWidth = session.context.sampleRate / analyser.fftSize;
@@ -78,6 +85,7 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
     let lastQualifiedAt = -Infinity;
     let lastSampleAt = performance.now();
     let lastProgress = 0;
+    let lastLevel = -1;
 
     session.sampling = window.setInterval(() => {
       const now = performance.now();
@@ -85,22 +93,30 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
       lastSampleAt = now;
       analyser.getFloatTimeDomainData(waveform);
       const volume = loudness(waveform);
+      const level = Math.max(0, Math.min(1, (20 * Math.log10(Math.max(volume, .00001)) + 65) / 43));
       if (threshold === undefined) {
         calibratedLevels.push(volume);
-        if (now < calibrationEnds) return;
+        if (now < calibrationEnds) {
+          if (Math.abs(lastLevel - level) > .03) {
+            lastLevel = level;
+            onState('calibrating', 0, level);
+          }
+          return;
+        }
         calibratedLevels.sort((first, second) => first - second);
-        const ambient = calibratedLevels[Math.floor(calibratedLevels.length * .75)];
-        threshold = Math.max(.014, ambient * 2.6, ambient + .009);
-        onState('listening', 0);
+        const ambient = calibratedLevels[Math.floor(calibratedLevels.length * .4)];
+        threshold = Math.max(.0035, ambient * 1.55, ambient + .0018);
+        onState('listening', 0, level);
         return;
       }
 
       if (now - lastQualifiedAt > allowedGap) qualifiedTime = 0;
       if (volume >= threshold) {
         analyser.getFloatFrequencyData(spectrum);
-        if (coverage(spectrum, low) >= .30 &&
-            coverage(spectrum, mid) >= .24 &&
-            coverage(spectrum, high) >= .14) {
+        // Phone microphones may filter one side of the spectrum. Still require
+        // broad energy in two neighbouring bands to reject narrow tones.
+        if (coverage(spectrum, mid) >= .23 &&
+            (coverage(spectrum, low) >= .26 || coverage(spectrum, high) >= .16)) {
           qualifiedTime += elapsed;
           lastQualifiedAt = now;
         }
@@ -111,9 +127,10 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
         return;
       }
       const progress = qualifiedTime / requiredBlowTime;
-      if (progress !== lastProgress) {
+      if (progress !== lastProgress || Math.abs(lastLevel - level) > .03) {
         lastProgress = progress;
-        onState('listening', progress);
+        lastLevel = level;
+        onState('listening', progress, level);
       }
     }, sampleInterval);
     onState('calibrating', 0);
@@ -140,7 +157,7 @@ function createBlowDetector({ onState = () => {}, onBlow = () => {} } = {}) {
         video: false,
         audio: {
           channelCount: { ideal: 1 },
-          echoCancellation: { ideal: true },
+          echoCancellation: { ideal: false },
           noiseSuppression: { ideal: false },
           autoGainControl: { ideal: false },
         },

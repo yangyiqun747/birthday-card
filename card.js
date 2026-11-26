@@ -330,16 +330,20 @@ async function startCamera() {
   }
 }
 
-function updateMic(state, progress = 0) {
+function updateMic(state, progress = 0, level = 0) {
   const ongoing = ['loading', 'calibrating', 'listening'].includes(state);
   if (phase !== 'lit') return;
-  micRunning = ongoing;
-  syncControls();
+  if (micRunning !== ongoing) {
+    micRunning = ongoing;
+    sound.setMicActive(ongoing);
+    syncControls();
+  }
+  byId('mic-level').style.transform = 'scaleX(' + level + ')';
   byId('mic-progress').style.transform = 'scaleX(' + progress + ')';
   const hint = {
     loading: '请在浏览器提示中允许麦克风。',
     calibrating: '先安静片刻，正在校准环境声。',
-    listening: '对着麦克风轻轻持续吹气。',
+    listening: progress > 0 ? '识别到吹气，保持一下。' : '麦克风已开启。朝麦克风轻吹约半秒。',
     denied: '麦克风未获授权，点一下蜡烛就能熄灭。',
     unavailable: '这里无法使用麦克风，点一下蜡烛就能熄灭。',
     timeout: '暂时没有识别到吹气，点一下蜡烛也能熄灭。',
@@ -352,10 +356,13 @@ function updateMic(state, progress = 0) {
 function stopMic() {
   blow.stop();
   micRunning = false;
+  sound.setMicActive(false);
+  byId('mic-level').style.transform = 'scaleX(0)';
   byId('mic-progress').style.transform = 'scaleX(0)';
 }
 
 function markGuideSeen() {
+  guideSeen = true;
   try { localStorage.setItem('birthday-guide-v1', 'seen'); } catch { /* Private mode may deny storage. */ }
 }
 
@@ -367,7 +374,7 @@ function openDialog(mode) {
   byId('dialog-copy').textContent = isGuide
     ? '点击画面可以走完整场生日贺卡。想试隔空手势，再开启摄像头。'
     : '只在你的设备上识别' + (cameraMode ? '手势' : '吹气') + '。画面和声音不上传、不存储，也可以继续点击体验。';
-  byId('dialog-steps').hidden = !isGuide;
+  byId('dialog-steps').hidden = !(isGuide || (cameraMode && !guideSeen));
   byId('dialog-accept').textContent = isGuide ? '开启手势' : '继续授权';
   byId('dialog-dismiss').textContent = '用点击体验';
   if (!dialog.open && typeof dialog.showModal === 'function') dialog.showModal();
@@ -375,7 +382,7 @@ function openDialog(mode) {
 }
 
 function closeDialog() {
-  markGuideSeen();
+  if (guideMode !== 'mic') markGuideSeen();
   if (typeof dialog.close === 'function') dialog.close();
   else dialog.removeAttribute('open');
 }
@@ -395,7 +402,9 @@ byId('dialog-accept').addEventListener('click', () => {
     void blow.start();
   }
 });
-dialog.addEventListener('cancel', markGuideSeen);
+dialog.addEventListener('cancel', () => {
+  if (guideMode !== 'mic') markGuideSeen();
+});
 cameraButton.addEventListener('click', () => {
   if (camera) stopCamera('摄像头已关闭，可以继续点击。');
   else openDialog('camera');
@@ -435,4 +444,3 @@ document.addEventListener('visibilitychange', () => {
 syncControls();
 let guideSeen = false;
 try { guideSeen = localStorage.getItem('birthday-guide-v1') === 'seen'; } catch { /* Optional onboarding flag. */ }
-if (!guideSeen) openDialog('guide');
