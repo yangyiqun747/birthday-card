@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
-  <meta name="description" content="伸手聚拢星尘，点亮烛光，再放一场生日烟花。">
+  <meta name="description" content="点亮一片星空，许个愿，收下一封生日祝福。">
   <meta name="theme-color" content="#100d18">
   <title>为你点亮一颗星</title>
   <link rel="icon" href="data:,">
@@ -82,7 +82,7 @@
       <section class="scene" id="scene" aria-label="生日星尘、粒子蛋糕和烟花">
         <canvas id="point-cloud" aria-hidden="true"></canvas>
         <canvas id="particle-scene" tabindex="0" role="img" aria-label="三维粒子画面，可点击继续、拖动旋转或双指缩放。也可以用方向键旋转。"></canvas>
-        <span class="orbit-hint" id="orbit-hint">拖动旋转</span>
+        <span class="orbit-hint" id="orbit-hint" data-start>轻点星空开始</span>
         <button class="button secondary finale-skip" id="finale-skip" type="button" hidden>打开祝福</button>
         <div class="viewfinder" id="viewfinder" hidden>
           <div class="preview-frame">

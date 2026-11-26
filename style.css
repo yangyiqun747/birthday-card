@@ -88,7 +88,6 @@ details:not([open]) > .sound-panel, details:not([open]) > .quick-panel { display
 .camera-icon::after { content: ""; position: absolute; right: -5px; top: 1px; width: 4px; height: 5px; background: currentColor; clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 70%); }
 .status { color: var(--muted); font-size: .875rem; margin: 10px 0 0; line-height: 1.55; }
 .status:empty { position: absolute; width: 1px; height: 1px; margin: 0; overflow: hidden; clip-path: inset(50%); }
-.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .mic-meter {
   display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 4px 9px; width: min(235px, 100%);
   margin-top: 7px; color: var(--muted); font-size: .78rem;
@@ -117,6 +116,11 @@ details:not([open]) > .sound-panel, details:not([open]) > .quick-panel { display
   right: 18px; border: 1px solid #ffccdf30; border-radius: 999px; font-size: .82rem; line-height: 1.43;
   color: var(--muted); background: #271b32bb;
 }
+.orbit-hint[data-start] {
+  inset: auto auto clamp(12px, 5%, 26px) 50%; max-width: calc(100% - 24px); translate: -50% 0;
+  padding: 7px 14px; border-color: #ffdba66b; color: var(--gold); background: #251a31ec;
+  font-size: .9rem; white-space: nowrap;
+}
 [data-phase="celebrated"] .orbit-hint, [data-phase="letter"] .orbit-hint { display: none; }
 .finale-skip { position: absolute; z-index: 5; bottom: max(20px, env(safe-area-inset-bottom)); left: 50%; translate: -50% 0; background: #1e152be0; }
 .viewfinder {
@@ -138,6 +142,10 @@ details:not([open]) > .sound-panel, details:not([open]) > .quick-panel { display
 }
 .letter h2 { color: var(--gold); font: 700 clamp(1.55rem, 3.9vw, 2.75rem)/1.12 var(--serif); margin: 0 0 7px; }
 .letter p { color: #f0ddee; font-size: clamp(.84rem, 1.5vw, 1.01rem); line-height: 1.63; margin: 5px 0; overflow-wrap: anywhere; }
+/* The full copy reserves space and stays readable to assistive technology. */
+#greeting p { display: grid; }
+#greeting p > span { grid-area: 1 / 1; }
+.greeting-copy { opacity: 0; pointer-events: none; user-select: none; }
 .letter .signature { text-align: right; color: var(--rose); }
 @keyframes letter-in { from { opacity: 0; transform: translate(-50%, 9px); } to { opacity: 1; transform: translate(-50%, 0); } }
 
@@ -171,7 +179,7 @@ details:not([open]) > .sound-panel, details:not([open]) > .quick-panel { display
   .quick-panel { left: auto; right: 0; }
   .orbit-hint { top: 13px; right: 13px; }
   .viewfinder { bottom: 12px; right: 12px; }
-  .letter { bottom: 6%; width: 84%; max-height: 54%; }
+  .letter { bottom: 6%; width: 84%; max-height: 68%; }
 }
 @media (max-width: 390px) {
   .shell { width: calc(100% - 28px); }

@@ -39,7 +39,7 @@ const blow = createBlowDetector({ onState: updateMic, onBlow: () => advance('rec
 const greetingLines = BirthdayCard.greeting.map((message) => {
   const paragraph = document.createElement('p');
   const spoken = document.createElement('span');
-  spoken.className = 'visually-hidden';
+  spoken.className = 'greeting-copy';
   spoken.textContent = message;
   const animated = document.createElement('span');
   animated.setAttribute('aria-hidden', 'true');
@@ -48,25 +48,40 @@ const greetingLines = BirthdayCard.greeting.map((message) => {
   return { animated, characters: Array.from(message) };
 });
 
+// Reserve a short opening beat and natural pauses without holding up the whole card.
+let revealAt = 270;
+const greetingTiming = greetingLines.flatMap(({ characters }) => {
+  const times = characters.map((character) => {
+    const time = revealAt;
+    revealAt += /[。！？]/.test(character) ? 190 : /[，、；：]/.test(character) ? 125 : 60;
+    return time;
+  });
+  revealAt += 270;
+  return times;
+});
+
 function renderGreeting() {
   cancelAnimationFrame(typingFrame);
-  const write = (limit) => {
-    let remaining = limit;
+  const write = (remaining) => {
     for (const { animated, characters } of greetingLines) {
       animated.textContent = characters.slice(0, Math.max(0, remaining)).join('');
       remaining -= characters.length;
     }
-    return remaining >= 0;
   };
-  if (reduced.matches) {
+  if (reduced.matches || !greetingTiming.length) {
     write(Infinity);
     return;
   }
   const started = performance.now();
+  let shown = 0;
   write(0);
   sound.play('typing');
   function type(now) {
-    if (!write(Math.floor((now - started) / 24))) typingFrame = requestAnimationFrame(type);
+    const previous = shown;
+    const elapsed = reduced.matches ? Infinity : now - started;
+    while (shown < greetingTiming.length && greetingTiming[shown] <= elapsed) shown++;
+    if (shown !== previous) write(shown);
+    if (shown < greetingTiming.length) typingFrame = requestAnimationFrame(type);
   }
   typingFrame = requestAnimationFrame(type);
 }
@@ -88,7 +103,10 @@ function syncControls() {
   document.body.toggleAttribute('data-camera-active', active);
   byId('camera-action').textContent = active ? '关闭摄像头' : camera ? '取消开启' : '开启手势';
   cameraButton.hidden = phase === 'celebrated' || phase === 'letter';
-  byId('orbit-hint').textContent = active ? '☝️ 食指隔空旋转' : '拖动旋转';
+  const startHint = phase === 'sealed' && !camera?.stream;
+  const orbitHint = byId('orbit-hint');
+  orbitHint.toggleAttribute('data-start', startHint);
+  orbitHint.textContent = startHint ? '轻点星空开始' : active ? '☝️ 食指隔空旋转' : '拖动旋转';
   viewfinder.hidden = !camera?.stream;
 
   micButton.hidden = phase !== 'lit';
@@ -100,7 +118,7 @@ function syncControls() {
     byId('gesture-title').textContent = active && current.gesture ? current.title : phase === 'lit' ? '许个愿' : current.tap;
     byId('gesture-detail').textContent = active && current.gesture
       ? current.detail
-      : phase === 'lit' ? '许完愿，点一下画面或开启吹气。' : '点一下画面或下方按钮。';
+      : phase === 'lit' ? '许完愿，点一下蜡烛，或选「吹蜡烛」。' : '点一下画面或下方按钮。';
   }
 
   byId('steps').hidden = phase === 'letter';
