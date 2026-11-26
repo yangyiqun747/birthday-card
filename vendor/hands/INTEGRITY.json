@@ -1,0 +1,13 @@
+{
+  "hands.binarypb": "sha256-q3bEIV/KmcwtsbWIXLg5jSEOWevmhSRfcuaStLWEIeQ=",
+  "hands_solution_packed_assets.data": "sha256-vc57Zr/Fs5uoakd3XJjgsYb+c/gwjCJ5+FKvTIn/30I=",
+  "hands_solution_simd_wasm_bin.data": "sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+  "hands_solution_packed_assets_loader.js": "sha256-0FwHOmKgyNLSHBi8jxWEJOzgB46gCmNulScIOxDKHhc=",
+  "hands_solution_simd_wasm_bin.js": "sha256-dyAXLgd1Y25klV+xCRlYyClOAaoQDDJytZsqVDwCjLU=",
+  "hands_solution_wasm_bin.js": "sha256-Lh+qmWWof0ljFuhXMcQb3h2bB91Ej2zTD1wiYrzTXik=",
+  "hands.js": "sha256-poshyVU9YUOE9/RZYi5G4C48nP33OSkVovodYV4zhHM=",
+  "hand_landmark_full.tflite": "sha256-jAJogsnsBZzg+OdSZr7lqaI8NBpA4AAN91U3TT0bm2g=",
+  "hand_landmark_lite.tflite": "sha256-1/3orBH4zgP4Zjd1v8Mj9PyfKjgGK09O+hQodO9bKkg=",
+  "hands_solution_simd_wasm_bin.wasm": "sha256-eO9+uG68ZCSsBrE/ibmh/AH/NeB1ION96YiHz4jAZlM=",
+  "hands_solution_wasm_bin.wasm": "sha256-TnDq+AY+DprBDmgtnWtVwI0HiPCo1Jkl4uSEY2Um4Vc="
+}
