@@ -2,20 +2,20 @@
 <html lang="zh-CN">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; media-src 'self' blob:; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; form-action 'none'">
   <meta name="description" content="点亮一片星空，许个愿，收下一封生日祝福。">
   <meta name="theme-color" content="#100d18">
   <title>为你点亮一颗星</title>
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="style.css">
-  <script defer src="config.js"></script>
+  <link rel="stylesheet" href="story/style.css">
+  <script defer src="story/config.js"></script>
   <script defer src="gestures.js"></script>
   <script defer src="point-cloud.js"></script>
-  <script defer src="particles.js"></script>
-  <script defer src="sound.js"></script>
+  <script defer src="story/particles.js"></script>
+  <script defer src="story/sound.js"></script>
   <script defer src="blow.js"></script>
-  <script defer src="card.js"></script>
+  <script defer src="story/card.js"></script>
 </head>
 <body data-phase="sealed">
   <div class="shell">
@@ -32,7 +32,7 @@
             <label for="music">背景音乐</label>
             <select id="music">
               <option value="off">关闭</option>
-              <option value="music-box">星光八音盒</option>
+              <option value="music-box" selected>星光八音盒</option>
               <option value="piano">烛光钢琴</option>
             </select>
           </div>
@@ -44,14 +44,6 @@
       <section class="intro" aria-labelledby="title">
         <h1 id="title">为你点亮<br><em>一颗星。</em></h1>
 
-        <ol class="steps" id="steps" aria-label="贺卡进度">
-          <li class="step" aria-current="step">点星</li>
-          <li class="step">聚星</li>
-          <li class="step">点烛</li>
-          <li class="step">烟花</li>
-          <li class="step">祝福</li>
-        </ol>
-
         <div class="gesture-cue" id="gesture-cue">
           <span id="gesture-icon" class="gesture-icon" aria-hidden="true">✋</span>
           <div><strong id="gesture-title">点亮星星</strong><p id="gesture-detail">点一下画面，唤醒星光。</p></div>
@@ -60,16 +52,6 @@
           <button class="button primary" id="tap-button" type="button">点亮星星</button>
           <button class="button secondary" id="camera-button" type="button"><span class="camera-icon" aria-hidden="true"></span><span id="camera-action">开启手势</span></button>
           <button class="button secondary" id="mic-button" type="button" hidden>吹蜡烛</button>
-          <details class="shortcuts" id="shortcuts">
-            <summary class="quiet-button">快速体验</summary>
-            <div class="quick-panel">
-              <button type="button" data-jump="stars">点星</button>
-              <button type="button" data-jump="ready">看蛋糕</button>
-              <button type="button" data-jump="lit">点烛</button>
-              <button type="button" data-jump="celebrated">看烟花</button>
-              <button type="button" data-jump="letter">看祝福</button>
-            </div>
-          </details>
         </div>
         <p class="status" id="status" role="status"></p>
         <div class="mic-meter" id="mic-meter" hidden aria-hidden="true">
@@ -83,7 +65,21 @@
         <canvas id="point-cloud" aria-hidden="true"></canvas>
         <canvas id="particle-scene" tabindex="0" role="img" aria-label="三维粒子画面，可点击继续、拖动旋转或双指缩放。也可以用方向键旋转。"></canvas>
         <span class="orbit-hint" id="orbit-hint" data-start>轻点星空开始</span>
-        <button class="button secondary finale-skip" id="finale-skip" type="button" hidden>打开祝福</button>
+        <button class="star-touch start-star" id="start-star" type="button" aria-label="轻碰这颗星"><span aria-hidden="true"></span></button>
+        <div class="luck-stars" id="luck-stars" hidden>
+          <button class="star-touch" type="button" aria-label="左边的星星"><span aria-hidden="true"></span></button>
+          <button class="star-touch" type="button" aria-label="上方的星星"><span aria-hidden="true"></span></button>
+          <button class="star-touch" type="button" aria-label="右边的星星"><span aria-hidden="true"></span></button>
+        </div>
+        <p class="scene-wish" id="scene-wish" aria-live="polite" hidden></p>
+        <div class="birthday-finale" id="birthday-finale" hidden><p>生日快乐！</p></div>
+        <button class="button secondary finale-skip" id="finale-skip" type="button" hidden>收下祝福</button>
+        <button class="story-envelope" id="story-envelope" type="button" aria-label="拆开信封" hidden>
+          <span class="envelope-paper" aria-hidden="true"></span><span class="envelope-front" aria-hidden="true"></span>
+          <span class="envelope-flap" aria-hidden="true"></span><span class="envelope-seal" aria-hidden="true">✦</span>
+        </button>
+        <button class="little-star" id="little-star" type="button" aria-label="角落的小星星" hidden>✧</button>
+        <div class="star-surprise" id="star-surprise" role="status" hidden>咦，居然被你发现啦！<br>那就偷偷再送你一份好运吧！</div>
         <div class="viewfinder" id="viewfinder" hidden>
           <div class="preview-frame">
             <video id="camera-video" autoplay muted playsinline aria-label="手势摄像头预览"></video>
@@ -100,7 +96,19 @@
       </section>
     </main>
 
-    <footer class="footnote"><span aria-hidden="true">✧</span> 摄像头画面和麦克风声音只在当前设备处理，不上传、不存储。也可全程点击。</footer>
+    <footer class="footnote">
+      <p><span aria-hidden="true">✧</span> 摄像头画面和麦克风声音只在当前设备处理，不上传、不存储。也可全程点击。</p>
+      <details class="shortcuts" id="shortcuts">
+        <summary class="quiet-button">快速体验</summary>
+        <div class="quick-panel">
+          <button type="button" data-jump="stars">点星</button>
+          <button type="button" data-jump="ready">看蛋糕</button>
+          <button type="button" data-jump="lit">点烛</button>
+          <button type="button" data-jump="celebrated">看烟花</button>
+          <button type="button" data-jump="letter">看祝福</button>
+        </div>
+      </details>
+    </footer>
   </div>
 
   <dialog class="intro-dialog" id="welcome-dialog" aria-labelledby="dialog-title">
